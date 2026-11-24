@@ -1,7 +1,7 @@
 <div align="center">
 <img style="width: 100px;" src="./Doc/ESP32_Jarolift_Controller_Logo.svg">
 
-<h3 style="text-align: center;">ESP32-Jarolift-Controller</h3>
+<h3 style="text-align: center;">ESP32-Jarolift-Controller · ESP32-C3 stability fork</h3>
 </div>
 
 -----
@@ -10,9 +10,26 @@
 
 -----
 
+## Über diesen Fork
+
+Dies ist ein inoffizieller, experimenteller Fork von [dewenni/ESP32-Jarolift-Controller](https://github.com/dewenni/ESP32-Jarolift-Controller) mit Fokus auf den **ESP32-C3 mit 4 MB Flash**.
+
+Das Projekt ist ein **Vibe-Coding-Experiment**: Mithilfe KI-gestützter Codeanalyse und Entwicklung sollen mögliche Designschwächen untersucht und behoben werden, die sich auf die Stabilität des ressourcenärmeren ESP32-C3 auswirken können. Anlass sind wiederkehrende Software-Panics und unerwartete Neustarts, unter anderem mit ähnlichen Symptomen wie in [Upstream-Issue #69](https://github.com/dewenni/ESP32-Jarolift-Controller/issues/69).
+
+Im Mittelpunkt stehen Speicher- und Stackbedarf, asynchrone MQTT- und Netzwerkkommunikation, konkurrierende Zugriffe, GPIO-Validierung, Absturzdiagnose und der Schutz vor unbeabsichtigten Rollladenbefehlen.
+
+Die Entwicklung findet im Branch [`fix/esp32c3-stability`](https://github.com/Battlecake91/ESP32-Jarolift-Controller_optimized_C3/tree/fix/esp32c3-stability) statt. Die [technischen Hinweise](https://github.com/Battlecake91/ESP32-Jarolift-Controller_optimized_C3/blob/fix/esp32c3-stability/Doc/C3-Stability.md) beschreiben den aktuellen Ansatz und die notwendigen Prüfungen.
+
+> [!WARNING]
+> Dies ist ein laufendes Experiment und keine validierte Stabilitätsversion. Die genaue Ursache der gemeldeten Abstürze ist noch nicht abschließend geklärt. Firmware-Builds, Regressionstests und Tests auf realer Hardware sind erforderlich. Verwendung auf eigene Gefahr.
+
+Die Anerkennung für das ursprüngliche Projekt gebührt **dewenni** und den ursprünglichen Mitwirkenden. Die nachfolgende Dokumentation, Demo, Release-Badges und der Sponsor-Link beziehen sich, sofern nicht anders angegeben, auf das Originalprojekt. Dieser Fork ist kein offizieller Nachfolger oder Ersatz.
+
+-----
+
 <div align="center">
 
-[![Current Release](https://img.shields.io/github/release/dewenni/ESP32-Jarolift-Controller.svg)](https://github.com/dewenni/ESP32-Jarolift-Controller/releases/latest)
+[![Upstream Release](https://img.shields.io/github/release/dewenni/ESP32-Jarolift-Controller.svg)](https://github.com/dewenni/ESP32-Jarolift-Controller/releases/latest)
 ![GitHub Release Date](https://img.shields.io/github/release-date/dewenni/ESP32-Jarolift-Controller)
 ![GitHub last commit](https://img.shields.io/github/last-commit/dewenni/ESP32-Jarolift-Controller)
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/dewenni/ESP32-Jarolift-Controller/total?label=downloads%20total&color=%23f0cc59)
@@ -26,9 +43,7 @@
 -----
 
 <div align="center">
-Wenn dir dieses Projekt gefällt, klicke gerne auf <b>[Star ⭐️]</b> und <b>[Watch 👁]</b> um auf dem Laufenden zu bleiben.
-<br><br>
-Und wenn du meine Arbeit unterstützen möchtest, kannst auch folgendes nutzen <p>
+Unterstütze das Originalprojekt mit einem Star, indem du das Upstream-Repository beobachtest oder den Entwickler dewenni direkt unterstützt.<p>
 
 [![Sponsor](https://img.shields.io/badge/Sponsor%20me%20on-GitHub-%23EA4AAA.svg?style=for-the-badge&logo=github)](https://github.com/sponsors/dewenni)
 
