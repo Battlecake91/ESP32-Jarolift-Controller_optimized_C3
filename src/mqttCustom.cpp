@@ -95,6 +95,18 @@ void processMqttMessage(const s_MqttMessage &message) {
 
   const s_MqttMessage &msgCpy = message;
 
+  // Broker replays must never operate a motor or change device settings.
+  // HA availability is informational and may legitimately be retained.
+  if (message.retained) {
+    if (haStatusTopic[0] && strcmp(message.topic, haStatusTopic) == 0) {
+      if (config.mqtt.ha_enable && strcmp(message.payload, "online") == 0)
+        discoveryPending = true;
+    } else {
+      ESP_LOGW(TAG, "Retained MQTT command ignored: %s", message.topic);
+    }
+    return;
+  }
+
   ESP_LOGD(TAG, "process msg from buffer: %s, %s", msgCpy.topic, msgCpy.payload);
 
   // payload as number

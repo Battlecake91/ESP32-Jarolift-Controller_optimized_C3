@@ -11,6 +11,7 @@ struct s_MqttMessage {
   char topic[MQTT_TOPIC_LEN];
   char payload[MQTT_PAYLOAD_LEN];
   int len;
+  bool retained;
 };
 
 struct s_cfg_mqtt;

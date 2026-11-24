@@ -71,11 +71,12 @@ static void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProp
         total < sizeof(incoming.payload)) {
       snprintf(incoming.topic, sizeof(incoming.topic), "%s", topic);
       expected = total;
+      incoming.retained = properties.retain;
       receiving = true;
     }
   }
   if (!receiving || topic == nullptr || strcmp(topic, incoming.topic) != 0 || total != expected ||
-      index != received || index > total || len > total - index ||
+      properties.retain != incoming.retained || index != received || index > total || len > total - index ||
       (len > 0 && (payload == nullptr || memchr(payload, '\0', len) != nullptr))) {
     receiving = false;
     ESP_LOGW(TAG, "Invalid or oversized MQTT command dropped");
