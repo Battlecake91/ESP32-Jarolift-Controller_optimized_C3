@@ -5,8 +5,8 @@
 
 // Without setCa() the library does not verify the download server certificate.
 // Images are unsigned; older releases are explicitly labelled in the Tools page.
-#define GITHUB_OWNER "dewenni"
-#define GITHUB_REPO "ESP32-Jarolift-Controller"
+#define GITHUB_OWNER "Battlecake91"
+#define GITHUB_REPO "ESP32-Jarolift-Controller_optimized_C3"
 
 static const char *TAG = "GITHUB"; // LOG TAG
 

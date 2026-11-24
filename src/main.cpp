@@ -2,6 +2,7 @@
 #include <ArduinoOTA.h>
 #include <shutterPosition.h>
 #include <esp_ota_ops.h>
+#include <esp_heap_caps.h>
 #include <basics.h>
 #include <config.h>
 #include <homee.h>
@@ -161,6 +162,19 @@ void setup() {
  * @return  none
  * *******************************************************************/
 void loop() {
+
+  // Serial-only diagnostics: avoid allocating JSON or growing the log ring.
+#if defined(CONFIG_IDF_TARGET_ESP32C3) && CONFIG_IDF_TARGET_ESP32C3
+  static uint32_t lastMemoryReport = 0;
+  if (millis() - lastMemoryReport >= 30000 && !ota.isActive() && !shutterPositionBusy()) {
+    lastMemoryReport = millis();
+    Serial.printf("[MEM] free=%u min=%u largest=%u loopStackMin=%u\n",
+                  (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+                  (unsigned)heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+                  (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+                  (unsigned)uxTaskGetStackHighWaterMark(nullptr));
+  }
+#endif
 
   // reset watchdog
   if (wdt.isActive() && wdtTimer.cycleTrigger(2000)) {

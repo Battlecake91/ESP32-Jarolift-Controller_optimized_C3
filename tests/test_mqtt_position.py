@@ -25,7 +25,7 @@ struct Config {
  struct {bool enable=false;} eth;
 };
 extern Config config;
-struct s_MqttMessage {char topic[512]={},payload[512]={};int len=0;};
+struct s_MqttMessage {char topic[512]={},payload[512]={};int len=0;bool retained=false;};
 bool mqttIsConnected();void mqttPublish(const char*,const char*,bool);void mqttSubscribe(const char*);const char *addTopic(const char*);
 inline const auto &mqttGetConnectionConfig(){return config.mqtt;}
 namespace EspSysUtil {struct OTA {bool active=false;static OTA&getInstance(){static OTA x;return x;}bool isActive(){return active;}};struct RestartReason{static void saveLocal(const char*){}static const char *get(){return "test";}};}
@@ -62,7 +62,7 @@ bool shutterPositionTarget(uint8_t ch,const char*p){targetChannel=ch;targetValue
 void shutterPositionPublish(){++publications;}
 void jaroCmd(JaroCmdType,uint8_t){++manualCalls;}void jaroCmd(JaroCmdGrpType,uint16_t){++manualCalls;}
 JsonDocument cover(){JsonDocument d;assert(!deserializeJson(d,published.at("homeassistant/cover/controller/shutter1/config")));return d;}
-void command(const char*topic,const char*payload){s_MqttMessage m;snprintf(m.topic,sizeof(m.topic),"%s",topic);snprintf(m.payload,sizeof(m.payload),"%s",payload);processMqttMessage(m);}
+void command(const char*topic,const char*payload,bool retained=false){s_MqttMessage m;m.retained=retained;snprintf(m.topic,sizeof(m.topic),"%s",topic);snprintf(m.payload,sizeof(m.payload),"%s",payload);processMqttMessage(m);}
 int main(){
  config.jaro.ch_enable[0]=config.jaro.ch_enable[1]=true;strcpy(config.jaro.ch_name[0],"Living room");
  config.position.calibration[0]=PositionCalibration{{2400,15800,28600},{12200,26400,29800}};
@@ -73,6 +73,9 @@ int main(){
  targetChannel=-1;command("jaro/cmd/position/16","75");assert(targetChannel==15);
  targetChannel=-1;command("jaro/cmd/position/17","25");assert(targetChannel==-1);
  command("jaro/cmd/shutter/1","0");command("jaro/cmd/shutter/1","1");assert(manualCalls==2);
+ command("jaro/cmd/shutter/1","UP",true);command("jaro/cmd/group/up","1",true);
+ command("jaro/cmd/position/1","50",true);assert(manualCalls==2&&targetChannel==-1);
+ published.clear();command("homeassistant/status","online",true);mqttCustomCyclic();assert(!published.empty());
  config.position.calibration[0]=PositionCalibration{};mqttCustomCyclic();assert(cover()["set_pos_t"].isNull());
  config.position.calibration[0]=PositionCalibration{{2400,15800,28600},{12200,26400,29800}};mqttCustomCyclic();assert(cover()["set_pos_t"]=="jaro/cmd/position/1");
  config.position.enable=false;mqttCustomCyclic();assert(cover()["set_pos_t"].isNull());
