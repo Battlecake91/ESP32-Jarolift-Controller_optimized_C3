@@ -111,7 +111,7 @@ void JaroliftController::setKeys(unsigned long masterMSB, unsigned long masterLS
  * @param   none
  * @return  none
  * *******************************************************************/
-bool JaroliftController::getCC1101State() { return cc1101_.connected(); }
+bool JaroliftController::getCC1101State() { return initOK_ && cc1101_.connected(); }
 
 /**
  *******************************************************************
@@ -1139,6 +1139,25 @@ void JaroliftController::begin() {
   initOK_ = false;
   lastTxOK_ = false;
   ESP_LOGI(TAG, "start CC1101 setup");
+#if defined(CONFIG_IDF_TARGET_ESP32C3) && CONFIG_IDF_TARGET_ESP32C3
+  // GPIO 12..17 belong to the flash interface; 18/19 to native USB.
+  // GPIO 11 is reserved on common C3 modules (VDD_SPI). Do not guess a
+  // replacement wiring for saved configurations.
+  const int radioPins[] = {gpio_.sck, gpio_.miso, gpio_.mosi, gpio_.cs, gpio_.gdo0, gpio_.gdo2};
+  for (size_t i = 0; i < sizeof(radioPins) / sizeof(radioPins[0]); ++i) {
+    const int pin = radioPins[i];
+    if (pin < 0 || pin > 21 || (pin >= 11 && pin <= 19)) {
+      ESP_LOGE(TAG, "Unsafe C3 radio GPIO %d; correct the configuration and restart", pin);
+      return;
+    }
+    for (size_t j = 0; j < i; ++j) {
+      if (pin == radioPins[j]) {
+        ESP_LOGE(TAG, "Duplicate C3 radio GPIO %d; correct the configuration and restart", pin);
+        return;
+      }
+    }
+  }
+#endif
   EEPROM.begin(sizeof(devCount_));
   devCount_ = getDeviceCounter();
 
