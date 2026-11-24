@@ -45,6 +45,7 @@ Individual scripts can also be run with `python3 tests/test_….py` or
 | `test_serial_tx.py` | Radio serial compatibility across every 20-bit legacy base and all 16 channels. Checks KeeLoq keys, discriminator values and UP/DOWN/STOP/group frames with representative bases and boundary values. Also exercises invalid channel indices. |
 | `test_rx_glitch.py` | Actual edge-capture methods: short HIGH/LOW disturbances, false sync, stale HIGH invalidation, frozen buffers, timer rollover and deterministic noise. |
 | `test_rx_decode.py` | Actual capture/decoder/KeeLoq methods: all 16 channels, groups, commands, terminal HIGH handling, truncated frames and discriminator mismatch. |
+| `test_stability.py` | Actual packet ID access order, MQTT QoS header extraction, and log ring full/wrap/clear/stale-snapshot behavior using host stubs. |
 | `test_ota_validation.py` | `markAppValid` from `src/main.cpp` with a fake clock and OTA API. Checks offline confirmation at 30 seconds, deferral during active OTA, 10-second retries and no repeat after success. |
 | `test_position_ui.cjs` | Actual frontend logic: feature/calibration visibility, slider without immediate transmission, explicit execute, calibration steps, apply/cancel, queued target display/replacement, multiple independent active phases and per-channel busy state. |
 | `test_remote_mapping_ui.cjs` | Actual frontend logic: selected motor, confirmation before save, Unicode limit, removal, session ownership and cleanup after disconnect. |
