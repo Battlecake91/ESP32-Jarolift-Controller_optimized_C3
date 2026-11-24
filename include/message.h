@@ -12,12 +12,14 @@
 #endif
 #define MAX_LOG_ENTRY 128 // max length of one entry
 
-struct s_logdata {
-  int lastLine;
-  char buffer[MAX_LOG_LINES][MAX_LOG_ENTRY];
+struct LogSnapshot {
+  uint64_t end;
+  size_t count;
 };
 
-extern s_logdata logData;
+LogSnapshot logSnapshot();
+bool readLogEntry(const LogSnapshot &snapshot, size_t offset, bool newestFirst,
+                  char (&entry)[MAX_LOG_ENTRY]);
 
 /* P R O T O T Y P E S ********************************************************/
 void messageSetup();

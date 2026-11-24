@@ -14,7 +14,31 @@ static uint32_t totalHeap = 0;
 static uint32_t heapSamples[HEAP_SAMPLE_COUNT];
 static int sampleIndex = 0;
 static const char *TAG = "MSG"; // LOG TAG
-s_logdata logData;
+static char logBuffer[MAX_LOG_LINES][MAX_LOG_ENTRY];
+static uint64_t logNext = 0;
+static size_t logCount = 0;
+static portMUX_TYPE logMux = portMUX_INITIALIZER_UNLOCKED;
+
+LogSnapshot logSnapshot() {
+  portENTER_CRITICAL(&logMux);
+  const LogSnapshot snapshot{logNext, logCount};
+  portEXIT_CRITICAL(&logMux);
+  return snapshot;
+}
+
+bool readLogEntry(const LogSnapshot &snapshot, size_t offset, bool newestFirst,
+                  char (&entry)[MAX_LOG_ENTRY]) {
+  if (offset >= snapshot.count)
+    return false;
+  const uint64_t sequence = newestFirst ? snapshot.end - 1 - offset
+                                       : snapshot.end - snapshot.count + offset;
+  portENTER_CRITICAL(&logMux);
+  const bool available = sequence < logNext && logNext - sequence <= logCount;
+  if (available)
+    memcpy(entry, logBuffer[sequence % MAX_LOG_LINES], sizeof(entry));
+  portEXIT_CRITICAL(&logMux);
+  return available;
+}
 esp_log_level_t logLevel = ESP_LOG_INFO;
 
 static muTimer checkHeapTimer = muTimer();
@@ -168,10 +192,9 @@ int custom_vprintf(const char *format, va_list args) {
  * @return  none
  * *******************************************************************/
 void clearLogBuffer() {
-  logData.lastLine = 0;
-  for (int i = 0; i < MAX_LOG_LINES; i++) {
-    memset(logData.buffer[i], 0, sizeof(logData.buffer[i]));
-  }
+  portENTER_CRITICAL(&logMux);
+  logCount = 0;
+  portEXIT_CRITICAL(&logMux);
 }
 
 /**
@@ -182,8 +205,14 @@ void clearLogBuffer() {
  * *******************************************************************/
 void addLogBuffer(const char *message) {
   if (strlen(message) != 0) {
-    snprintf(logData.buffer[logData.lastLine], sizeof(logData.buffer[logData.lastLine]), "[%s]  %s", EspStrUtil::getDateTimeString(), message);
-    logData.lastLine = (logData.lastLine + 1) % MAX_LOG_LINES; // update the lastLine index in a circular manner
+    char entry[MAX_LOG_ENTRY] = {};
+    snprintf(entry, sizeof(entry), "[%s]  %s", EspStrUtil::getDateTimeString(), message);
+    portENTER_CRITICAL(&logMux);
+    memcpy(logBuffer[logNext % MAX_LOG_LINES], entry, sizeof(entry));
+    ++logNext;
+    if (logCount < MAX_LOG_LINES)
+      ++logCount;
+    portEXIT_CRITICAL(&logMux);
   }
 }
 

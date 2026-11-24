@@ -27,7 +27,6 @@ static char tmpMessage[300] = {'\0'};
 static bool refreshRequest = false;
 static uint16_t devCntNew, devCntOld = 0;
 static JsonDocument jsonDoc;
-static int logLine, logIdx = 0;
 static bool logReadActive = false;
 JsonDocument jsonLog;
 static const char *TAG = "WEB"; // LOG TAG
@@ -245,8 +244,6 @@ bool webLogRefreshActive() { return logReadActive; }
  * *******************************************************************/
 void webReadLogBuffer() {
   logReadActive = true;
-  logLine = 0;
-  logIdx = 0;
 }
 
 /**
@@ -256,53 +253,24 @@ void webReadLogBuffer() {
  * @return  none
  * *******************************************************************/
 void webReadLogBufferCyclic() {
-
+  if (!logReadActive)
+    return;
+  logReadActive = false;
   jsonLog.clear();
   jsonLog["type"] = "logger";
   jsonLog["cmd"] = "add_log";
-  JsonArray entryArray = jsonLog["entry"].to<JsonArray>();
-
-  while (logReadActive) {
-
-    if (logLine == 0 && logData.lastLine == 0) {
-      // log empty
-      logReadActive = false;
-      return;
-    }
-    if (config.log.order == 1) {
-      logIdx = (logData.lastLine - logLine - 1) % MAX_LOG_LINES;
-    } else {
-      if (logData.buffer[logData.lastLine][0] == '\0') {
-        // buffer is not full - start reading at element index 0
-        logIdx = logLine % MAX_LOG_LINES;
-      } else {
-        // buffer is full - start reading at element index "logData.lastLine"
-        logIdx = (logData.lastLine + logLine) % MAX_LOG_LINES;
-      }
-    }
-    if (logIdx < 0) {
-      logIdx += MAX_LOG_LINES;
-    }
-    if (logIdx >= MAX_LOG_LINES) {
-      logIdx = 0;
-    }
-    if (logLine == MAX_LOG_LINES - 1) {
-      // end
-      webUI.wsUpdateWebJSON(jsonLog);
-      logReadActive = false;
-      return;
-    } else {
-      if (logData.buffer[logIdx][0] != '\0') {
-        entryArray.add(logData.buffer[logIdx]);
-        logLine++;
-      } else {
-        // no more entries
-        logReadActive = false;
-        webUI.wsUpdateWebJSON(jsonLog);
-        return;
-      }
-    }
+  JsonArray entries = jsonLog["entry"].to<JsonArray>();
+  const LogSnapshot snapshot = logSnapshot();
+  const bool newestFirst = config.log.order == 1;
+  char entry[MAX_LOG_ENTRY];
+  for (size_t offset = 0; offset < snapshot.count; ++offset) {
+    if (readLogEntry(snapshot, offset, newestFirst, entry))
+      entries.add(String(entry)); // JSON owns its copy; the ring may be overwritten.
+    if (jsonLog.overflowed())
+      break;
   }
+  webUI.wsUpdateWebJSON(jsonLog);
+  jsonLog.clear();
 }
 
 /**

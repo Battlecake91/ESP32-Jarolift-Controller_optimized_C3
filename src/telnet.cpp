@@ -464,39 +464,18 @@ void cmdHelp(char param[MAX_PAR][MAX_CHAR]) {
  * @return  none
  * *******************************************************************/
 void readLogger() {
-  int line = 0;
-  while (line < MAX_LOG_LINES) {
-    int lineIndex;
-    if (line == 0 && logData.lastLine == 0) {
-      telnet.println("log empty");
-      break;
-    } else if (logData.buffer[logData.lastLine][0] == '\0') {
-      lineIndex = line % MAX_LOG_LINES; // buffer is not full - start reading at element index 0
-    } else {
-      lineIndex = (logData.lastLine + line) % MAX_LOG_LINES; // buffer is full - start reading at element index "logData.lastLine"
-    }
-    if (lineIndex < 0) {
-      lineIndex += MAX_LOG_LINES;
-    }
-    if (lineIndex >= MAX_LOG_LINES) {
-      lineIndex = 0;
-    }
-    if (line == 0) {
-      telnet.printf("<LOG-Begin>\n%s\n", logData.buffer[lineIndex]); // add header
-      line++;
-    } else if (line == MAX_LOG_LINES - 1) {
-      telnet.printf("%s\n<LOG-END>\n", logData.buffer[lineIndex]); // add footer
-      line++;
-    } else {
-      if (logData.buffer[lineIndex][0] != '\0') {
-        telnet.printf("%s\n", logData.buffer[lineIndex]); // add messages
-        line++;
-      } else {
-        telnet.printf("<LOG-END>\n");
-        break;
-      }
-    }
+  const LogSnapshot snapshot = logSnapshot();
+  if (snapshot.count == 0) {
+    telnet.println("log empty");
+    return;
   }
+  telnet.printf("<LOG-Begin>\n");
+  char entry[MAX_LOG_ENTRY];
+  for (size_t offset = 0; offset < snapshot.count; ++offset) {
+    if (readLogEntry(snapshot, offset, false, entry))
+      telnet.printf("%s\n", entry);
+  }
+  telnet.printf("<LOG-END>\n");
 }
 
 /**
