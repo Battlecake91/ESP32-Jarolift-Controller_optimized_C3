@@ -7,6 +7,24 @@ Diese Datei gilt für `ESP-Projekte`. Gemeinsame Komponenten liegen in
 Änderungen an einem Repository sind nicht automatisch ein Auftrag, die anderen
 Repositories ebenfalls zu ändern. Den Umfang aus dem aktuellen Auftrag ableiten.
 
+## Projektschwerpunkt dieses Forks
+
+Der ESP32-C3-Fork dient der funktionalen Qualitätssicherung und der Verbesserung
+der Betriebsstabilität eines Rollladencontrollers. Gegenstand sind sporadische
+Firmware-Abstürze, unerwartete Neustarts, Ressourcenbedarf, Initialisierung,
+Nebenläufigkeit, zuverlässige Gerätekommunikation und Dauerbetrieb.
+
+Bei Stabilitätsarbeiten eigene Firmware und eigene Testhardware verwenden.
+Prüfungen im Rahmen lokaler Testaufbauten durchführen. Befunde anhand von
+Resetursachen, seriellen Protokollen, reproduzierbaren Softwaretests und
+Hardwaremessungen bewerten. Keine Penetrationstests oder Suche nach
+ausnutzbaren Sicherheitslücken als Teil dieses Projektauftrags.
+
+Für Release-Bewertungen ausgeführte Tests, konkrete Ergebnisse, offene
+Punkte und nicht durchführbare Prüfungen getrennt dokumentieren.
+Vorhandene funktionale Anforderungen und Betriebsschutzmaßnahmen bleiben
+unverändert; tatsächliche Fehler und Einschränkungen nicht verschweigen.
+
 ## Arbeitsweise und Kommunikation
 
 - Auf Deutsch, konkret und knapp kommunizieren. Technische Entscheidungen so

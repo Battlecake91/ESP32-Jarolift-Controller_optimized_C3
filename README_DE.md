@@ -14,14 +14,13 @@
 
 Dies ist ein inoffizieller, experimenteller Fork von [dewenni/ESP32-Jarolift-Controller](https://github.com/dewenni/ESP32-Jarolift-Controller) mit Fokus auf den **ESP32-C3 mit 4 MB Flash**.
 
-Das Projekt ist ein **Vibe-Coding-Experiment**: Mithilfe KI-gestützter Codeanalyse und Entwicklung sollen mögliche Designschwächen untersucht und behoben werden, die sich auf die Stabilität des ressourcenärmeren ESP32-C3 auswirken können. Anlass sind wiederkehrende Software-Panics und unerwartete Neustarts, unter anderem mit ähnlichen Symptomen wie in [Upstream-Issue #69](https://github.com/dewenni/ESP32-Jarolift-Controller/issues/69).
+Das Projekt ist ein **Vibe-Coding-Experiment zur Qualitätssicherung von Embedded-Firmware**. Ziel ist es, wiederkehrende Software-Panics und unerwartete Neustarts auf dem ESP32-C3 zu diagnostizieren, Implementierungsfehler und Probleme bei der Ressourcenverwaltung zu beheben und den zuverlässigen Dauerbetrieb auf der eigenen Entwicklungshardware nachzuweisen. [Upstream-Issue #69](https://github.com/dewenni/ESP32-Jarolift-Controller/issues/69) beschreibt ein ähnliches Fehlerbild auf einer anderen ESP32-Variante; daraus lässt sich die Ursache der C3-Abstürze nicht ableiten.
 
-Im Mittelpunkt stehen Speicher- und Stackbedarf, asynchrone MQTT- und Netzwerkkommunikation, konkurrierende Zugriffe, GPIO-Validierung, Absturzdiagnose und der Schutz vor unbeabsichtigten Rollladenbefehlen.
+Im Mittelpunkt stehen Start- und Resetverhalten, RAM- und Task-Stackbedarf, Ablaufsteuerung und konkurrierende Zugriffe, zuverlässige MQTT- und WLAN-Verbindungen, Peripherieinitialisierung und funktionale Regressionstests. Geprüft werden die eigene Firmware, ein ESP32-C3-Testboard und lokale Testinfrastruktur. Penetrationstests und die Suche nach ausnutzbaren Sicherheitslücken sind nicht Gegenstand des Projekts.
 
-Die Entwicklung findet im Branch [`fix/esp32c3-stability`](https://github.com/Battlecake91/ESP32-Jarolift-Controller_optimized_C3/tree/fix/esp32c3-stability) statt. Die [technischen Hinweise](https://github.com/Battlecake91/ESP32-Jarolift-Controller_optimized_C3/blob/fix/esp32c3-stability/Doc/C3-Stability.md) beschreiben den aktuellen Ansatz und die notwendigen Prüfungen.
+Entwicklungskandidaten liegen im Branch [`fix/esp32c3-stability`](https://github.com/Battlecake91/ESP32-Jarolift-Controller_optimized_C3/tree/fix/esp32c3-stability). Der separate Branch [`fix/c3-boot-diagnostics`](https://github.com/Battlecake91/ESP32-Jarolift-Controller_optimized_C3/tree/fix/c3-boot-diagnostics) untersucht das Startverhalten der Originalfirmware. Siehe auch die [technischen Hinweise](https://github.com/Battlecake91/ESP32-Jarolift-Controller_optimized_C3/blob/fix/esp32c3-stability/Doc/C3-Stability.md).
 
-> [!WARNING]
-> Dies ist ein laufendes Experiment und keine validierte Stabilitätsversion. Die genaue Ursache der gemeldeten Abstürze ist noch nicht abschließend geklärt. Firmware-Builds, Regressionstests und Tests auf realer Hardware sind erforderlich. Verwendung auf eigene Gefahr.
+**Validierungsstand:** Experimentelle Entwicklung. Builds, funktionale Regressionstests und Dauerlaufprüfungen auf Hardware sind unterschiedliche Nachweise. Ein stabiles Release setzt dokumentierte Ergebnisse voraus; die Ursache der ursprünglichen Panics ist noch nicht abschließend nachgewiesen.
 
 Die Anerkennung für das ursprüngliche Projekt gebührt **dewenni** und den ursprünglichen Mitwirkenden. Die nachfolgende Dokumentation, Demo, Release-Badges und der Sponsor-Link beziehen sich, sofern nicht anders angegeben, auf das Originalprojekt. Dieser Fork ist kein offizieller Nachfolger oder Ersatz.
 
