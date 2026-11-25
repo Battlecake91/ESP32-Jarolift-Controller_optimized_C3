@@ -38,9 +38,20 @@ uint8_t gpio_gdo0 = 21;
  * Macros
  */
 // Select (SPI) CC1101
-#define cc1101_Select() SPI.begin(gpio_sck, gpio_miso, gpio_mosi, gpio_cs)
+static bool traceSpiInit = false;
+static void traceSpiBegin() {
+  if (traceSpiInit) Serial.printf("[BOOT] SPI.begin START\n");
+  const bool ok = SPI.begin(gpio_sck, gpio_miso, gpio_mosi, gpio_cs);
+  if (traceSpiInit) Serial.printf("[BOOT] SPI.begin DONE (%d)\n", (int)ok);
+}
+static void traceSpiEnd() {
+  if (traceSpiInit) Serial.printf("[BOOT] SPI.end START\n");
+  SPI.end();
+  if (traceSpiInit) Serial.printf("[BOOT] SPI.end DONE\n");
+}
+#define cc1101_Select() traceSpiBegin()
 // Deselect (SPI) CC1101
-#define cc1101_Deselect() SPI.end()
+#define cc1101_Deselect() traceSpiEnd()
 // Wait until SPI MISO line goes low
 #define wait_Miso() delay(10)
 // while(digitalRead(PORT_SPI_MISO))
@@ -96,6 +107,7 @@ void CC1101::setGPIO(int8_t sck, int8_t miso, int8_t mosi, int8_t ss, int8_t gdo
  */
 bool CC1101::connected(void) {
   uint8_t marcstate = readStatusReg(CC1101_MARCSTATE);
+  if (traceSpiInit) Serial.printf("[BOOT] MARCSTATE=0x%02x\n", (unsigned)marcstate);
   return (marcstate != 0 && marcstate != 0xff);
 }
 
@@ -119,10 +131,13 @@ void CC1101::wakeUp(void) {
  * 'value'	Value to be writen
  */
 void CC1101::writeReg(byte regAddr, byte value) {
+  if (traceSpiInit) Serial.printf("[BOOT] writeReg 0x%02x START\n", (unsigned)regAddr);
   cc1101_Select();       // Select CC1101
   wait_Miso();           // Wait until MISO goes low
   SPI.transfer(regAddr); // Send register address
+  if (traceSpiInit) Serial.printf("[BOOT] writeReg address DONE\n");
   SPI.transfer(value);   // Send value
+  if (traceSpiInit) Serial.printf("[BOOT] writeReg value DONE\n");
   cc1101_Deselect();     // Deselect CC1101
 }
 
@@ -180,8 +195,11 @@ byte CC1101::readReg(byte regAddr, byte regType) {
   addr = regAddr | regType;
   cc1101_Select();          // Select CC1101
   wait_Miso();              // Wait until MISO goes low
+  if (traceSpiInit) Serial.printf("[BOOT] readReg 0x%02x transfer START\n", (unsigned)regAddr);
   SPI.transfer(addr);       // Send register address
+  if (traceSpiInit) Serial.printf("[BOOT] readReg address DONE\n");
   val = SPI.transfer(0x00); // Read result
+  if (traceSpiInit) Serial.printf("[BOOT] readReg value DONE 0x%02x\n", (unsigned)val);
   cc1101_Deselect();        // Deselect CC1101
 
   return val;
@@ -223,7 +241,9 @@ void CC1101::reset(void) {
   cc1101_Select(); // Select CC1101
 
   wait_Miso();               // Wait until MISO goes low
+  if (traceSpiInit) Serial.printf("[BOOT] CC1101 SRES START\n");
   SPI.transfer(CC1101_SRES); // Send reset command strobe
+  if (traceSpiInit) Serial.printf("[BOOT] CC1101 SRES DONE\n");
   wait_Miso();               // Wait until MISO goes low
 
   cc1101_Deselect(); // Deselect CC1101
@@ -313,18 +333,27 @@ bool CC1101::init(uint8_t freq) {
   pinMode(gpio_miso, INPUT);
   pinMode(gpio_cs, OUTPUT);
 
-  SPI.begin(gpio_sck, gpio_miso, gpio_mosi, gpio_cs);
+  traceSpiInit = true;
+  Serial.printf("[BOOT] SPI pins sck=%u miso=%u mosi=%u cs=%u gdo0=%u\n", (unsigned)gpio_sck, (unsigned)gpio_miso, (unsigned)gpio_mosi, (unsigned)gpio_cs, (unsigned)gpio_gdo0);
+  traceSpiBegin();
   pinMode(gpio_gdo0, INPUT); // Config GDO0 as input
 
+  Serial.printf("[BOOT] CC1101 probe START\n");
   if (connected() == false) {
+    Serial.printf("[BOOT] CC1101 probe FAILED\n");
+    traceSpiInit = false;
     return false;
   }
+  Serial.printf("[BOOT] CC1101 probe DONE; reset START\n");
 
   reset(); // Reset CC1101
+  Serial.printf("[BOOT] CC1101 reset DONE; PATABLE START\n");
 
   // Configure PATABLE
   // writeBurstReg(CC1101_PATABLE, (byte*)paTable, 8);
   writeReg(CC1101_PATABLE, paTableByte);
+  Serial.printf("[BOOT] CC1101 PATABLE DONE\n");
+  traceSpiInit = false;
 
   return true;
 }

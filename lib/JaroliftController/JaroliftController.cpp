@@ -188,11 +188,17 @@ void JaroliftController::updateDeviceCounter(bool increment) {
  * @return  none
  * *******************************************************************/
 void JaroliftController::initRmt() {
+  Serial.printf("[BOOT] rmtInit START gpio=%d\n", gpio_.gdo0);
   rmtOK_ = rmtInit(gpio_.gdo0, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_2, kRmtResolutionHz);
+  Serial.printf("[BOOT] rmtInit DONE (%d)\n", (int)rmtOK_);
   if (rmtOK_) {
+    Serial.printf("[BOOT] rmtSetEOT START\n");
     rmtSetEOT(gpio_.gdo0, HIGH); // idle level after each telegram = carrier off
+    Serial.printf("[BOOT] rmtSetEOT DONE\n");
     rmt_data_t idle = {1, HIGH, 1, HIGH};
-    rmtWrite(gpio_.gdo0, &idle, 1, RMT_WAIT_FOR_EVER); // set line to idle level
+    Serial.printf("[BOOT] rmtWrite idle START\n");
+    const bool idleOK = rmtWrite(gpio_.gdo0, &idle, 1, RMT_WAIT_FOR_EVER);
+    Serial.printf("[BOOT] rmtWrite idle DONE (%d)\n", (int)idleOK);
     ESP_LOGI(TAG, "RMT TX ready on GDO0 (GPIO %d)", gpio_.gdo0);
   } else {
     ESP_LOGE(TAG, "RMT init on GDO0 (GPIO %d) failed", gpio_.gdo0);
@@ -1139,27 +1145,42 @@ void JaroliftController::begin() {
   initOK_ = false;
   lastTxOK_ = false;
   ESP_LOGI(TAG, "start CC1101 setup");
+  Serial.printf("[BOOT] EEPROM.begin START\n");
   EEPROM.begin(sizeof(devCount_));
+  Serial.printf("[BOOT] EEPROM.begin DONE\n");
+  Serial.printf("[BOOT] NVS counter START\n");
   devCount_ = getDeviceCounter();
+  Serial.printf("[BOOT] NVS counter DONE\n");
 
   cc1101_.setGPIO(gpio_.sck, gpio_.miso, gpio_.mosi, gpio_.cs, gpio_.gdo0);
   // init() writes the configured transmit power to the CC1101 PATABLE.
   cc1101_.setTxPowerAmp(PA_LongDistance);
+  Serial.printf("[BOOT] CC1101.init START\n");
   if (!cc1101_.init()) {
+    Serial.printf("[BOOT] CC1101.init FAILED\n");
     ESP_LOGE(TAG, "Initialisation of the CC1101 module aborted!");
     return;
   }
+  Serial.printf("[BOOT] CC1101.init DONE\n");
+  Serial.printf("[BOOT] CC1101 sync START\n");
   cc1101_.setSyncWord(kSyncWord, false);
+  Serial.printf("[BOOT] CC1101 sync DONE; frequency START\n");
   cc1101_.setCarrierFreq(CFREQ_433);
+  Serial.printf("[BOOT] CC1101 frequency DONE; address check START\n");
   cc1101_.disableAddressCheck();
+  Serial.printf("[BOOT] CC1101 address check DONE; RMT START\n");
 
   initRmt();
+  Serial.printf("[BOOT] RMT setup DONE (%d)\n", (int)rmtOK_);
   if (!rmtOK_)
     return;
+  Serial.printf("[BOOT] RX interrupt START gpio=%d\n", gpio_.gdo2);
   pinMode(gpio_.gdo2, INPUT_PULLUP);
   attachInterrupt(gpio_.gdo2, radioRxMeasureISR, CHANGE);
+  Serial.printf("[BOOT] RX interrupt DONE; enterRx START\n");
 
   enterRx();
+  Serial.printf("[BOOT] enterRx DONE\n");
 
   ESP_LOGD(TAG, "[KQ-RX] glitch filter <200 us; terminal HIGH decoding and discriminator check enabled");
   initOK_ = true;
